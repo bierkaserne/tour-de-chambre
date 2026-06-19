@@ -1,3 +1,13 @@
+/* ===================================================================
+   Tour de Chambre — Design tokens
+   Theme: a corridor of numbered door plaques in an old house. Dark,
+   warm "ink" background, brass-engraved plaques for every group of
+   data (a person row, a Stationsgruppe, a final Gruppe). Native Apple
+   font stack on purpose — this is a Safari/iOS PWA, so it should look
+   instantly at home there and keep working fully offline with no
+   external font requests.
+   =================================================================== */
+
 :root {
   --ink: #1b1815;
   --ink-raised: #221e19;
@@ -75,7 +85,7 @@ button {
   display: none !important;
 }
 
-/* Plaque signature element */
+/* ---------- Plaque signature element ---------- */
 
 .plaque {
   position: relative;
@@ -105,7 +115,7 @@ button {
   right: 10px;
 }
 
-/* Header */
+/* ---------- Header ---------- */
 
 .app-header {
   display: flex;
@@ -137,7 +147,7 @@ button {
   color: var(--muted);
 }
 
-/* Layout */
+/* ---------- Layout ---------- */
 
 main#app {
   flex: 1;
@@ -172,7 +182,7 @@ main#app {
   margin-bottom: 0;
 }
 
-/* Forms */
+/* ---------- Forms ---------- */
 
 .field-label {
   display: block;
@@ -237,7 +247,7 @@ select:focus {
   gap: 12px;
 }
 
-/* Buttons */
+/* ---------- Buttons ---------- */
 
 .btn {
   border: 1px solid var(--border);
@@ -288,7 +298,121 @@ select:focus {
   font-size: 0.78rem;
 }
 
-/* Row list (Personen, Regeln) */
+/* ---------- Personen: Toolbar + kompaktes Grid ---------- */
+
+.people-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.people-search {
+  flex: 1;
+}
+
+.people-search::-webkit-search-cancel-button {
+  filter: invert(0.7);
+}
+
+.people-count {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.people-section + .people-section {
+  margin-top: 20px;
+}
+
+.people-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+.people-section-title .count-badge {
+  background: var(--ink-raised-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-size: 0.68rem;
+  color: var(--text);
+}
+
+.people-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 8px;
+}
+
+.people-empty-note {
+  color: var(--muted);
+  font-size: 0.82rem;
+  padding: 4px 2px;
+}
+
+.person-card {
+  position: relative;
+  background: var(--ink-raised);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 9px 26px 9px 12px;
+  min-height: 42px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+}
+
+.person-card.unassigned {
+  border-style: dashed;
+  border-color: rgba(194, 90, 74, 0.4);
+}
+
+.person-card .person-name {
+  font-weight: 600;
+  color: var(--cream);
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.person-card .person-sub {
+  font-size: 0.68rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.person-card .person-delete {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.92rem;
+  cursor: pointer;
+  padding: 6px 7px;
+  line-height: 1;
+}
+
+.person-card .person-delete:hover,
+.person-card .person-delete:active {
+  color: var(--danger);
+}
+
+/* ---------- Row list (Regeln) ---------- */
 
 .row-list {
   display: flex;
@@ -367,7 +491,7 @@ select:focus {
   color: #e9a9b3;
 }
 
-/* Stationsgruppen cards */
+/* ---------- Stationsgruppen cards ---------- */
 
 .card-list {
   display: flex;
@@ -416,7 +540,7 @@ select:focus {
   flex-shrink: 0;
 }
 
-/* Editor panel (new Stationsgruppe / Einteilung settings) */
+/* ---------- Editor panel (new Stationsgruppe / Einteilung settings) ---------- */
 
 .editor {
   padding: 16px;
@@ -462,7 +586,7 @@ select:focus {
   flex: 1;
 }
 
-/* Stepper */
+/* ---------- Stepper ---------- */
 
 .stepper {
   display: flex;
@@ -499,7 +623,7 @@ select:focus {
   margin: 0;
 }
 
-/* Toggle pills (Alkohol / Essen) */
+/* ---------- Toggle pills (Alkohol / Essen) ---------- */
 
 .toggle-row {
   display: flex;
@@ -523,7 +647,7 @@ select:focus {
   background: rgba(200, 161, 54, 0.14);
 }
 
-/* Seed row */
+/* ---------- Seed row ---------- */
 
 .seed-row {
   display: flex;
@@ -541,7 +665,7 @@ select:focus {
   padding: 0;
 }
 
-/* Issues / warnings */
+/* ---------- Issues / warnings ---------- */
 
 .issue-box {
   background: rgba(194, 90, 74, 0.12);
@@ -561,7 +685,7 @@ select:focus {
   margin-bottom: 0;
 }
 
-/* Result summary */
+/* ---------- Result summary ---------- */
 
 .result-summary {
   font-family: var(--font-mono);
@@ -578,7 +702,7 @@ select:focus {
   color: var(--muted);
 }
 
-/* Result group plaques */
+/* ---------- Result group plaques ---------- */
 
 .group-grid {
   display: flex;
@@ -642,7 +766,7 @@ select:focus {
   white-space: nowrap;
 }
 
-/* Data tools */
+/* ---------- Data tools ---------- */
 
 .data-tools {
   display: flex;
@@ -654,7 +778,7 @@ select:focus {
   border-top: 1px solid var(--border-soft);
 }
 
-/* Tab bar */
+/* ---------- Tab bar ---------- */
 
 .tabbar {
   position: fixed;
@@ -694,7 +818,7 @@ select:focus {
   color: var(--brass-bright);
 }
 
-/* Toast */
+/* ---------- Toast ---------- */
 
 .toast {
   position: fixed;

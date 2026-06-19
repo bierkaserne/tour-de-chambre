@@ -2,6 +2,10 @@ import * as store from './store.js';
 import { solve } from './solver.js';
 import { randomSeedString } from './prng.js';
 
+// ---------------------------------------------------------------------
+// Tab navigation
+// ---------------------------------------------------------------------
+
 function showTab(name) {
   document.querySelectorAll('.tab-panel').forEach((el) => {
     el.classList.toggle('active', el.dataset.panel === name);
@@ -20,6 +24,10 @@ document.getElementById('tabbar').addEventListener('click', (e) => {
   if (btn.dataset.tab === 'regeln') renderRuleSelects();
 });
 
+// ---------------------------------------------------------------------
+// Toast
+// ---------------------------------------------------------------------
+
 let toastTimer = null;
 function toast(msg) {
   const el = document.getElementById('toast');
@@ -29,34 +37,92 @@ function toast(msg) {
   toastTimer = setTimeout(() => el.classList.add('hidden'), 2200);
 }
 
+// ---------------------------------------------------------------------
+// PERSONEN
+// ---------------------------------------------------------------------
+
+let peopleSearchQuery = '';
+
 function renderPeopleList() {
-  const ul = document.getElementById('list-people');
   const state = store.getState();
-  ul.innerHTML = '';
+  const wrap = document.getElementById('people-sections');
+  const countEl = document.getElementById('people-count');
+  wrap.innerHTML = '';
 
   if (state.people.length === 0) {
-    ul.innerHTML = '<li class="hint small">Noch keine Personen angelegt.</li>';
+    countEl.textContent = '';
+    wrap.innerHTML = '<p class="hint small">Noch keine Personen angelegt.</p>';
     return;
   }
 
-  state.people.forEach((p) => {
-    const pg = store.personGroupOf(p.id);
-    const li = document.createElement('li');
-    li.className = 'row-item';
-    li.innerHTML = `
-      <div class="row-main">
-        <span class="row-title"></span>
-        <span class="row-sub${pg ? '' : ' warn'}"></span>
-      </div>
-      <button class="icon-btn" data-action="delete-person" data-id="${p.id}" aria-label="Person löschen">✕</button>
-    `;
-    li.querySelector('.row-title').textContent = p.name;
-    li.querySelector('.row-sub').textContent = pg
-      ? `Station: ${pg.memberIds.map(store.personName).join(', ')}`
-      : 'noch keiner Stationsgruppe zugeordnet';
-    ul.appendChild(li);
-  });
+  const totalUnassigned = store.unassignedPeople().length;
+  countEl.textContent = `${state.people.length} Person${state.people.length === 1 ? '' : 'en'} · ${totalUnassigned} nicht zugeordnet`;
+
+  const query = peopleSearchQuery.trim().toLowerCase();
+  const collator = (a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base' });
+
+  const unassignedIds = new Set(store.unassignedPeople().map((p) => p.id));
+  let unassigned = state.people.filter((p) => unassignedIds.has(p.id)).sort(collator);
+  let assigned = state.people.filter((p) => !unassignedIds.has(p.id)).sort(collator);
+
+  if (query) {
+    unassigned = unassigned.filter((p) => p.name.toLowerCase().includes(query));
+    assigned = assigned.filter((p) => p.name.toLowerCase().includes(query));
+  }
+
+  if (query && unassigned.length === 0 && assigned.length === 0) {
+    wrap.innerHTML = `<p class="hint small">Keine Treffer für „${escapeHtml(peopleSearchQuery.trim())}“.</p>`;
+    return;
+  }
+
+  wrap.appendChild(buildPeopleSection('Nicht zugeordnet', unassigned, true));
+  wrap.appendChild(buildPeopleSection('Zugeordnet', assigned, false));
 }
+
+function buildPeopleSection(title, people, isUnassignedSection) {
+  const section = document.createElement('div');
+  section.className = 'people-section';
+
+  const header = document.createElement('div');
+  header.className = 'people-section-title';
+  header.innerHTML = `<span>${title}</span><span class="count-badge">${people.length}</span>`;
+  section.appendChild(header);
+
+  if (people.length === 0) {
+    const note = document.createElement('p');
+    note.className = 'people-empty-note';
+    note.textContent = isUnassignedSection ? 'Alle Personen sind einer Stationsgruppe zugeordnet.' : 'Noch niemand zugeordnet.';
+    section.appendChild(note);
+    return section;
+  }
+
+  const grid = document.createElement('ul');
+  grid.className = 'people-grid';
+
+  people.forEach((p) => {
+    const pg = isUnassignedSection ? null : store.personGroupOf(p.id);
+    const li = document.createElement('li');
+    li.className = 'person-card' + (isUnassignedSection ? ' unassigned' : '');
+    li.innerHTML = `
+      <span class="person-name"></span>
+      <span class="person-sub"></span>
+      <button class="person-delete" data-action="delete-person" data-id="${p.id}" aria-label="${escapeHtml(p.name)} löschen">✕</button>
+    `;
+    li.querySelector('.person-name').textContent = p.name;
+    li.querySelector('.person-sub').textContent = pg
+      ? pg.memberIds.filter((id) => id !== p.id).map(store.personName).join(', ') || 'eigene Station'
+      : 'frei';
+    grid.appendChild(li);
+  });
+
+  section.appendChild(grid);
+  return section;
+}
+
+document.getElementById('people-search').addEventListener('input', (e) => {
+  peopleSearchQuery = e.target.value;
+  renderPeopleList();
+});
 
 document.getElementById('form-person').addEventListener('submit', (e) => {
   e.preventDefault();
@@ -70,7 +136,7 @@ document.getElementById('form-person').addEventListener('submit', (e) => {
   input.focus();
 });
 
-document.getElementById('list-people').addEventListener('click', (e) => {
+document.getElementById('people-sections').addEventListener('click', (e) => {
   const btn = e.target.closest('[data-action="delete-person"]');
   if (!btn) return;
   const person = store.getState().people.find((p) => p.id === btn.dataset.id);
@@ -80,6 +146,10 @@ document.getElementById('list-people').addEventListener('click', (e) => {
     renderAll();
   }
 });
+
+// ---------------------------------------------------------------------
+// STATIONEN (PersonenGruppen)
+// ---------------------------------------------------------------------
 
 const pgEditorState = {
   editingId: null,
@@ -254,6 +324,10 @@ document.getElementById('list-pg').addEventListener('click', (e) => {
   }
 });
 
+// ---------------------------------------------------------------------
+// REGELN
+// ---------------------------------------------------------------------
+
 function renderRuleSelects() {
   const state = store.getState();
   const selA = document.getElementById('rule-person-a');
@@ -351,6 +425,10 @@ document.getElementById('list-rules').addEventListener('click', (e) => {
   store.removeRule(btn.dataset.id);
   renderRulesList();
 });
+
+// ---------------------------------------------------------------------
+// EINTEILUNG
+// ---------------------------------------------------------------------
 
 function renderEinteilungSettings() {
   const state = store.getState();
@@ -451,6 +529,10 @@ function renderResult(result) {
   });
 }
 
+// ---------------------------------------------------------------------
+// DATEN: Export / Import / Reset
+// ---------------------------------------------------------------------
+
 document.getElementById('btn-export').addEventListener('click', () => {
   const data = store.exportState();
   const blob = new Blob([data], { type: 'application/json' });
@@ -492,6 +574,10 @@ document.getElementById('btn-reset').addEventListener('click', () => {
     toast('Alles gelöscht');
   }
 });
+
+// ---------------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------------
 
 function renderAll() {
   renderPeopleList();
