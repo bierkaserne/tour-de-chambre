@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>Tour de Chambre — Einteilung</title>
+<meta name="description" content="Gruppeneinteilung für die Tour de Chambre: Stationen, Regeln und faire, zufällige Einteilung." />
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#1B1815" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Tour de Chambre" />
+<link rel="apple-touch-icon" href="icons/icon-180.png" />
+<link rel="icon" href="icons/favicon-32.png" />
+
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<header class="plaque app-header">
+  <svg class="header-glyph" viewBox="0 0 48 48" aria-hidden="true">
+    <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M16 30 L16 18 Q16 14 20 14 L24 14 Q28 14 28 18 L28 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="32" cy="24" r="2.2" fill="currentColor"/>
+  </svg>
+  <div class="app-header-text">
+    <h1>Tour&nbsp;de&nbsp;Chambre</h1>
+    <p class="eyebrow">Stationen &amp; Gruppen-Einteilung</p>
+  </div>
+</header>
+
+<main id="app">
+
+  <!-- ===================== TAB: PERSONEN ===================== -->
+  <section class="tab-panel" data-panel="personen">
+    <p class="hint">Trage alle Personen ein, die an der Tour de Chambre mitmachen. Ordne sie danach im Tab <strong>Stationen</strong> ihrer Stationsgruppe zu.</p>
+
+    <form id="form-person" class="inline-form" autocomplete="off">
+      <input type="text" id="input-person-name" placeholder="Name der Person" maxlength="40" required />
+      <button type="submit" class="btn btn-brass">+ Hinzufügen</button>
+    </form>
+
+    <ul id="list-people" class="row-list"></ul>
+  </section>
+
+  <!-- ===================== TAB: STATIONEN ===================== -->
+  <section class="tab-panel" data-panel="stationen">
+    <p class="hint">Eine Stationsgruppe sind die Personen, die gemeinsam eine oder mehrere Stationen vorbereiten — meist eine Person, manchmal mehrere.</p>
+
+    <button id="btn-new-pg" class="btn btn-brass btn-full">+ Neue Stationsgruppe</button>
+
+    <div id="pg-editor" class="plaque editor hidden">
+      <h3 id="pg-editor-title">Neue Stationsgruppe</h3>
+
+      <label class="field-label">Mitglieder</label>
+      <div id="pg-member-chips" class="chip-row"></div>
+      <p id="pg-no-people-hint" class="hint small hidden">Erst im Tab „Personen“ Personen anlegen.</p>
+
+      <div class="field-grid">
+        <div>
+          <label class="field-label" for="pg-stations">Anzahl Stationen</label>
+          <div class="stepper">
+            <button type="button" class="stepper-btn" data-step="-1" aria-label="weniger">–</button>
+            <input type="number" id="pg-stations" min="1" max="20" value="1" />
+            <button type="button" class="stepper-btn" data-step="1" aria-label="mehr">+</button>
+          </div>
+        </div>
+        <div>
+          <label class="field-label">Angebot</label>
+          <div class="toggle-row">
+            <button type="button" class="toggle-pill" id="pg-toggle-alcohol" data-active="false">🍷 Alkohol</button>
+            <button type="button" class="toggle-pill" id="pg-toggle-food" data-active="false">🍽 Essen</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="editor-actions">
+        <button type="button" id="pg-cancel" class="btn btn-ghost">Abbrechen</button>
+        <button type="button" id="pg-save" class="btn btn-brass">Speichern</button>
+      </div>
+    </div>
+
+    <ul id="list-pg" class="card-list"></ul>
+  </section>
+
+  <!-- ===================== TAB: REGELN ===================== -->
+  <section class="tab-panel" data-panel="regeln">
+    <p class="hint">Lege fest, welche Personen unbedingt zusammen — oder auf keinen Fall zusammen — in einer Gruppe landen sollen. Regeln haben höchste Priorität bei der Einteilung.</p>
+
+    <form id="form-rule" class="inline-form stacked" autocomplete="off">
+      <div class="field-grid">
+        <div>
+          <label class="field-label" for="rule-person-a">Person A</label>
+          <select id="rule-person-a" required></select>
+        </div>
+        <div>
+          <label class="field-label" for="rule-person-b">Person B</label>
+          <select id="rule-person-b" required></select>
+        </div>
+      </div>
+      <div>
+        <label class="field-label" for="rule-type">Regel</label>
+        <select id="rule-type">
+          <option value="together">müssen zusammen sein</option>
+          <option value="apart">dürfen nicht zusammen sein</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-brass btn-full">+ Regel hinzufügen</button>
+    </form>
+
+    <ul id="list-rules" class="row-list"></ul>
+    <div id="rule-issues" class="issue-box hidden"></div>
+  </section>
+
+  <!-- ===================== TAB: EINTEILUNG ===================== -->
+  <section class="tab-panel" data-panel="einteilung">
+    <div class="plaque editor">
+      <label class="field-label" for="setting-num-groups">Anzahl Gruppen</label>
+      <div class="stepper">
+        <button type="button" class="stepper-btn" data-step="-1" data-target="setting-num-groups" aria-label="weniger">–</button>
+        <input type="number" id="setting-num-groups" min="1" max="50" value="2" />
+        <button type="button" class="stepper-btn" data-step="1" data-target="setting-num-groups" aria-label="mehr">+</button>
+      </div>
+
+      <label class="field-label" for="setting-seed">Seed</label>
+      <div class="seed-row">
+        <input type="text" id="setting-seed" maxlength="24" />
+        <button type="button" id="btn-new-seed" class="btn btn-ghost" title="Neuen Zufalls-Seed erzeugen">🎲</button>
+      </div>
+      <p class="hint small">Gleicher Seed + gleiche Daten = immer dieselbe Einteilung. Würfle neu für eine andere zufällige, aber weiterhin faire Verteilung.</p>
+
+      <button id="btn-generate" class="btn btn-brass btn-full btn-large">Einteilung erzeugen</button>
+    </div>
+
+    <div id="result-summary" class="result-summary hidden"></div>
+    <div id="result-issues" class="issue-box hidden"></div>
+    <div id="result-groups" class="group-grid"></div>
+    <div id="result-empty" class="empty-state hidden">
+      <p>Noch keine Stationsgruppen angelegt.</p>
+      <p class="hint small">Leg im Tab „Stationen“ los, dann kannst du hier die Einteilung erzeugen.</p>
+    </div>
+
+    <div class="data-tools">
+      <button id="btn-export" class="btn btn-ghost btn-small">Daten exportieren</button>
+      <button id="btn-import" class="btn btn-ghost btn-small">Daten importieren</button>
+      <button id="btn-reset" class="btn btn-ghost btn-small danger">Alles löschen</button>
+      <input type="file" id="file-import" accept="application/json" class="hidden" />
+    </div>
+  </section>
+
+</main>
+
+<nav class="tabbar" id="tabbar">
+  <button class="tabbar-btn active" data-tab="personen">
+    <span class="tabbar-icon">●</span><span>Personen</span>
+  </button>
+  <button class="tabbar-btn" data-tab="stationen">
+    <span class="tabbar-icon">▢</span><span>Stationen</span>
+  </button>
+  <button class="tabbar-btn" data-tab="regeln">
+    <span class="tabbar-icon">⚭</span><span>Regeln</span>
+  </button>
+  <button class="tabbar-btn" data-tab="einteilung">
+    <span class="tabbar-icon">⚄</span><span>Einteilung</span>
+  </button>
+</nav>
+
+<div id="toast" class="toast hidden"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
